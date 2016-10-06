@@ -68,9 +68,25 @@ function tend_custom_css_page() {
 
   echo '<hr />';
 
+  echo '<b>Change Log:</b><br /><input style="width:100%;" required type="text" name="changelog" value="" /> (You must make a note describing your change before updating)';
   echo '<input type="hidden" value="true" name="gen_css" />';
   submit_button('Update your stylesheet');
   echo '</form>';
+
+
+  $history = get_option('tend_changelog');
+  if($history){
+  echo '<h3>Recent Changes</h3>';
+  echo '<div style="width:100%; height:400px; overflow:auto;">';
+  foreach($history as $entry) {
+
+    echo '<p>' . $entry . '</p> <hr />';
+
+  }
+  echo '</div>';
+  }
+
+
 
   echo '</div>';
 
@@ -117,6 +133,17 @@ function update_the_stylesheet()
      $mobile = $_POST["mobilecss"];
      $tablet = $_POST["tabletcss"];
      $desktop = $_POST["desktopcss"];
+     $current_user = wp_get_current_user();
+     $changelogentry = '<b>User:</b> '. $current_user->display_name . '<br /><b>Log:</b> ' . $_POST["changelog"] . '<br /><b>Date:</b> ' . date("l jS \of F Y h:i:s A");
+
+     $changelog = array($changelogentry);
+
+     if (get_option('tend_changelog')) {
+     $oldlog = get_option('tend_changelog');
+     $newchangelog = array_merge( $changelog , $oldlog);
+   } else {
+     $newchangelog = $changelog;
+   }
 
      $cachebuster = date('zoB');
 
@@ -127,6 +154,8 @@ function update_the_stylesheet()
 
      update_option( 'tend_tabletbreak', $tabletbreak );
      update_option( 'tend_desktopbreak', $desktopbreak );
+
+     update_option('tend_changelog',  $newchangelog );
 
     update_option( 'tend_cachebuster', $cachebuster );
 
