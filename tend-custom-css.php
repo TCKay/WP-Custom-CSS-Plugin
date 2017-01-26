@@ -19,6 +19,18 @@ function tend_custom_css(){
 	add_action( 'admin_init', 'register_tend_css_settings' );
 }
 
+function tend_ccss_load_admin_style($hook) {
+        // Load only on ?page=10d-custom-css
+        if($hook != 'settings_page_10d-custom-css') {
+                return;
+        }
+        // wp_enqueue_style( 'tend_ccss_wp_admin_css', plugins_url('tend-custom-css/CodeMirror/theme/neat.css', dirname(__FILE__) ));
+        wp_enqueue_style( 'tend_ccss_wp_admin_css_theme', plugins_url('tend-custom-css/CodeMirror/lib/codemirror.css', dirname(__FILE__) ));
+        wp_enqueue_script( 'tend_ccss_wp_admin_cmjs', plugins_url('tend-custom-css/CodeMirror/lib/codemirror.js', dirname(__FILE__) ));
+       wp_enqueue_script( 'tend_ccss_wp_admin_js', plugins_url('tend-custom-css/CodeMirror/mode/css/css.js', dirname(__FILE__) ));
+}
+add_action( 'admin_enqueue_scripts', 'tend_ccss_load_admin_style' );
+
 
 function register_tend_css_settings() {
 	//register our settings
@@ -44,8 +56,8 @@ function tend_custom_css_page() {
   // Check whether the button has been pressed AND also check the nonce
   if (isset($_POST['gen_css']) && check_admin_referer('update_button_clicked')) {
     // the button has been pressed AND we've passed the security check
-    update_the_stylesheet();
-    save_css_options();
+    tend_ccss_update_the_stylesheet();
+    tend_ccss_save_css_options();
   }
 
   echo '<form action="options-general.php?page=10d-custom-css" method="post">';
@@ -57,16 +69,16 @@ function tend_custom_css_page() {
   wp_nonce_field('update_button_clicked');
 
 
-  echo '<h3>Mobile Styles</h3><textarea rows="10" cols="100" name="mobilecss">' . esc_attr( get_option('tend_mobilecss') ) . '</textarea>';
-  echo '<h3>Tablet Styles</h3><textarea rows="10" cols="100" name="tabletcss">' . esc_attr( get_option('tend_tabletcss') ) . '</textarea>';
-  echo '<h3>Desktop Styles</h3><textarea rows="10" cols="100" name="desktopcss">' . esc_attr( get_option('tend_desktopcss') ) . '</textarea>';
+  echo '<h3>Mobile Styles</h3><textarea rows="10" cols="100" class="csseditor" id="csseditor" name="mobilecss">' . esc_attr( get_option('tend_mobilecss') ) . '</textarea>';
+  echo '<h3>Tablet Styles</h3>';
+  echo '<b>Tablet Breakpoint:</b><br /><input type="text" style="margin-bottom: 15px;" name="tablet_breakpoint" value="' . esc_attr( get_option('tend_tabletbreak') ) . '" /> (pixels) <br />';
+  echo '<textarea rows="10" cols="100" class="csseditor" name="tabletcss">' . esc_attr( get_option('tend_tabletcss') ) . '</textarea>';
+  echo '<h3>Desktop Styles</h3>';
+  echo '<b>Desktop Breakpoint:</b><br /><input type="text" style="margin-bottom: 15px;" name="desktop_breakpoint" value="' . esc_attr( get_option('tend_desktopbreak') ) . '" /> (pixels)';
+  echo '<textarea rows="10" cols="100" class="csseditor" name="desktopcss">' . esc_attr( get_option('tend_desktopcss') ) . '</textarea>';
 
   echo '<hr />';
 
-  echo '<b>Tablet Breakpoint:</b><br /><input type="text" name="tablet_breakpoint" value="' . esc_attr( get_option('tend_tabletbreak') ) . '" /> (pixels) <br />';
-  echo '<b>Desktop Breakpoint:</b><br /><input type="text" name="desktop_breakpoint" value="' . esc_attr( get_option('tend_desktopbreak') ) . '" /> (pixels)';
-
-  echo '<hr />';
 
   echo '<b>Change Log:</b><br /><input style="width:100%;" required type="text" name="changelog" value="" /> (You must make a note describing your change before updating)';
   echo '<input type="hidden" value="true" name="gen_css" />';
@@ -90,9 +102,37 @@ function tend_custom_css_page() {
 
   echo '</div>';
 
+
+  ?>
+<script>
+jQuery(document).ready(function($) {
+var myTextArea = $('.csseditor');
+
+var myCodeMirror = CodeMirror.fromTextArea(myTextArea.get(0), {
+        lineNumbers: true,
+        matchBrackets: true,
+         extraKeys: {"Ctrl-Space": "autocomplete"},
+         mode: "text/css",
+});
+var myCodeMirror2 = CodeMirror.fromTextArea(myTextArea.get(1), {
+        lineNumbers: true,
+        matchBrackets: true,
+         extraKeys: {"Ctrl-Space": "autocomplete"},
+         mode: "text/css",
+});
+var myCodeMirror3 = CodeMirror.fromTextArea(myTextArea.get(2), {
+        lineNumbers: true,
+        matchBrackets: true,
+         extraKeys: {"Ctrl-Space": "autocomplete"},
+         mode: "text/css",
+});
+});
+</script>
+  <?php
+
 }
 
-function update_the_stylesheet()
+function tend_ccss_update_the_stylesheet()
 {
   echo '<div id="message" class="updated fade"><p>'
     .'Your stylesheet was updated' . '</p></div>';
@@ -125,7 +165,7 @@ function update_the_stylesheet()
 
 
 
-   function save_css_options() {
+   function tend_ccss_save_css_options() {
 
      $tabletbreak = $_POST["tablet_breakpoint"];
      $desktopbreak = $_POST["desktop_breakpoint"];
